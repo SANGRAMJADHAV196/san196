@@ -1,0 +1,165 @@
+       ID DIVISION.                                                     00010000
+       PROGRAM-ID. RPT.                                                 00020000
+       ENVIRONMENT  DIVISION.                                           00030000
+       INPUT-OUTPUT SECTION.                                            00040000
+       FILE-CONTROL.                                                    00050000
+           SELECT MASTERPT ASSIGN TO DD1                                00060000
+           ORGANIZATION IS INDEXED                                      00070000
+           ACCESS MODE IS DYNAMIC                                       00080000
+           RECORD KEY IS PET-ID OF MASTER                               00090001
+           FILE STATUS IS WS-FS1.                                       00091010
+           SELECT PROCSALE ASSIGN TO AS-DD3                             00100010
+           ORGANIZATION IS SEQUENTIAL                                   00110000
+           ACCESS MODE IS SEQUENTIAL                                    00120000
+           FILE STATUS IS WS-FS3.                                       00121010
+           SELECT OUTFILE ASSIGN TO DD6                                 00130010
+           FILE STATUS IS WS-FS6.                                       00140010
+       DATA DIVISION.                                                   00150000
+       FILE SECTION.                                                    00160000
+       FD MASTERPT.                                                     00170000
+       01 MASTER.                                                       00180000
+          05 PET-ID              PIC XXX.                               00190000
+          05 PET-TYPE            PIC X.                                 00200000
+             88 CAT     VALUE '1'.                                      00210000
+             88 DOG     VALUE '2'.                                      00220000
+             88 BIRD    VALUE '3'.                                      00230000
+             88 FISH    VALUE '4'.                                      00240000
+          05 BREED               PIC X(10).                             00250000
+          05 DOP                 PIC 9(6).                              00260000
+          05 CP                  PIC 9(4)V99.                           00270000
+          05 QUANT-AV            PIC 99.                                00280000
+          05                     PIC X(52).                             00290000
+       FD PROCSALE.                                                     00300000
+       01 PROCESS.                                                      00310000
+          05 PET-ID              PIC XXX.                               00320000
+          05 DOPNW               PIC 9(6).                              00330000
+          05 QUANT-BOU           PIC 99.                                00340000
+          05 TP                  PIC 9(5)V99.                           00350000
+          05 PROF-LOSS           PIC S9(4)V99.                          00360009
+          05                     PIC X(56).                             00370009
+       FD OUTFILE.                                                      00380000
+          01 OUTREC              PIC X(80).                             00390000
+       WORKING-STORAGE SECTION.                                         00400000
+       01 HEAD                   PIC X(80) VALUE 'PET-ID    BREED    DAT00410006
+      -        'EPUR    PRICE     QUANTITY    PROFIT'.                  00420006
+       01 WS-LINE1               PIC X(80) VALUE ALL  '-'.              00430007
+       01 WS-LINE2               PIC X(80) VALUE ALL  '*'.              00430107
+       01 WS-DATE.                                                      00430206
+          05                     PIC X(56) VALUE SPACES.                00430407
+          05                     PIC X(8) VALUE 'DATE: '.               00430507
+          05 WS-DATEVAL          PIC 9(6).                              00430606
+       01 WS-PTYPE               PIC X.                                 00431006
+       01 TEMP                   PIC 9(6).                              00432012
+       01 WS-PET-TYPE.                                                  00440006
+          05                     PIC X(10)  VALUE 'PET-TYPE: '.         00444006
+          05 WS-PET              PIC X(5)   VALUE SPACES.               00445006
+          05                     PIC X(41).                             00450007
+          05 PG                  PIC X(10)  VALUE 'PAGE-NO:'.           00460005
+          05 WS-PG               PIC 99     VALUE  01.                  00470022
+       01 WS-DET.                                                       00510000
+          05 WS-PID              PIC XXX.                               00530000
+          05                     PIC X(6)   VALUE SPACES.               00540010
+          05 WS-BREED            PIC X(8).                              00550007
+          05                     PIC X(2)   VALUE SPACES.               00560005
+          05 WS-DAT              PIC 9(6).                              00570007
+          05                     PIC X(5)   VALUE SPACES.               00580007
+          05 WS-PRICE            PIC 9(4).99.                           00590007
+          05                     PIC X(6).                              00600007
+          05 WS-QUANT            PIC 99.                                00610000
+          05                     PIC X(4)   VALUE SPACES.               00620007
+          05 WS-LP               PIC -9(5).99.                          00630009
+       01 WS-TOT.                                                       00651106
+          05                     PIC X(12)  VALUE 'TOTAL NO.OF '.       00651210
+          05 WS-TEMP             PIC X(5).                              00651310
+          05                     PIC X(6)   VALUE 'SOLD: '.             00651410
+          05 WS-TOTVAL           PIC 99     VALUE ZERO.                 00651506
+       01 WS-LPTYPE.                                                    00651606
+          05                     PIC X(22)  VALUE 'TOTAL PROFIT/LOSS: '.00651710
+          05 WS-LPVAL1           PIC -9(5).99.                          00651809
+       01 WS-FG                  PIC 99     VALUE 0.                    00652006
+       77 WS-FS1                 PIC 99.                                00653010
+       77 WS-FS3                 PIC 99.                                00654010
+       77 WS-FS6                 PIC 99.                                00655010
+       77 WS-LP1                 PIC S9(5)V99.                          00656009
+       01 WS-LPVAL               PIC S9(5)V99 VALUE ZERO.               00657009
+       PROCEDURE DIVISION.                                              00660000
+       MAIN-PARA.                                                       00670000
+           PERFORM OPEN-PARA                                            00680000
+           PERFORM READ-INPUT UNTIL WS-FS3 NOT = 0                      00710010
+           CLOSE MASTERPT PROCSALE OUTFILE                              00720000
+           EXIT PROGRAM.                                                00730015
+       CNTRL-BREAK.                                                     00740000
+           IF WS-FG = 1                                                 00741006
+              PERFORM SUMMARY-PARA                                      00742006
+           END-IF                                                       00743006
+           MOVE 1 TO WS-FG                                              00744006
+           EVALUATE TRUE                                                00746006
+           WHEN  PET-TYPE = '1'                                         00747006
+                 MOVE 'CAT'  TO  WS-PET                                 00748006
+                 MOVE WS-PET TO WS-TEMP                                 00748110
+           WHEN  PET-TYPE = '2'                                         00748206
+                 MOVE 'DOG'  TO  WS-PET                                 00748306
+                 MOVE WS-PET TO WS-TEMP                                 00748410
+           WHEN  PET-TYPE = '3'                                         00748506
+                 MOVE 'BIRD' TO  WS-PET                                 00748606
+                 MOVE WS-PET TO WS-TEMP                                 00748710
+           WHEN  PET-TYPE = '4'                                         00748806
+                 MOVE 'FISH' TO  WS-PET                                 00748906
+                 MOVE WS-PET TO WS-TEMP                                 00749010
+           END-EVALUATE                                                 00749106
+           ACCEPT TEMP  FROM DATE                                       00749213
+           MOVE TEMP(1:1) TO WS-DATEVAL(5:1)                            00749312
+           MOVE TEMP(2:1) TO WS-DATEVAL(6:1)                            00749412
+           MOVE TEMP(3:2) TO WS-DATEVAL(3:2)                            00749514
+           MOVE TEMP(5:1) TO WS-DATEVAL(1:1)                            00749614
+           MOVE TEMP(6:1) TO WS-DATEVAL(2:1)                            00749712
+           WRITE OUTREC FROM WS-DATE                                    00750007
+           WRITE OUTREC FROM WS-PET-TYPE                                00760006
+           WRITE OUTREC FROM HEAD                                       00761006
+      *    WRITE OUTREC                                                 00762008
+           ADD 01 TO WS-PG.                                             00780022
+       SUMMARY-PARA.                                                    00790006
+            WRITE OUTREC FROM WS-LINE1                                  00790107
+            WRITE OUTREC FROM WS-TOT                                    00791006
+            MOVE  SPACES TO OUTREC                                      00792006
+            WRITE OUTREC FROM WS-LPTYPE                                 00793006
+            MOVE  SPACES TO OUTREC                                      00794006
+            WRITE OUTREC FROM WS-LINE2                                  00794107
+            WRITE OUTREC                                                00795006
+            MOVE ZERO TO WS-TOTVAL                                      00796006
+            MOVE ZERO TO WS-LPVAL.                                      00797006
+       READ-INPUT.                                                      00800000
+           READ PROCSALE                                                00801001
+                AT END PERFORM SUMMARY-PARA                             00801106
+                NOT AT END                                              00802002
+                    MOVE PET-ID OF PROCESS TO PET-ID OF MASTER          00802106
+                    READ MASTERPT                                       00810006
+                    KEY IS PET-ID OF MASTER                             00810106
+                    INVALID KEY                                         00821006
+                        DISPLAY 'INVALID KEY: ' PET-ID OF MASTER        00822006
+                    NOT INVALID KEY                                     00830006
+                        IF PET-TYPE OF MASTER NOT = WS-PTYPE            00831006
+                           PERFORM CNTRL-BREAK                          00831106
+                        END-IF                                          00831206
+                        MOVE PET-TYPE OF MASTER TO WS-PTYPE             00831308
+                        MOVE PET-ID OF MASTER TO WS-PID                 00840006
+                        MOVE BREED OF MASTER  TO WS-BREED               00860006
+                        MOVE DOPNW     OF PROCESS TO WS-DAT             00870007
+                        MOVE TP        OF PROCESS TO WS-PRICE           00880006
+                        MOVE QUANT-BOU OF PROCESS TO WS-QUANT           00890006
+                        COMPUTE WS-TOTVAL = WS-TOTVAL + WS-QUANT        00891006
+                        MOVE PROF-LOSS OF PROCESS TO WS-LP1             00900007
+                        COMPUTE WS-LPVAL = WS-LPVAL + WS-LP1            00901007
+                        MOVE WS-LP1 TO WS-LP                            00901107
+                        MOVE WS-LPVAL TO WS-LPVAL1                      00901207
+                        WRITE OUTREC FROM WS-DET                        00910006
+                    END-READ                                            00951006
+                  DISPLAY 'KSDS READ ' WS-FS1                           00952010
+           END-READ.                                                    00960006
+       OPEN-PARA.                                                       00980002
+            OPEN INPUT MASTERPT                                         00990002
+            OPEN INPUT PROCSALE                                         01000002
+            OPEN OUTPUT OUTFILE                                         01010002
+            DISPLAY 'OPEN STATUS OF MASTERPT: ' WS-FS1                  01020010
+            DISPLAY 'OPEN STATUS OF PROCSALE: ' WS-FS3                  01030010
+            DISPLAY 'OPEN STATUS OF OUTFILE: ' WS-FS6.                  01040010
