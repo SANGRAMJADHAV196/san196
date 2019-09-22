@@ -1,0 +1,33 @@
+       ID DIVISION.                                                     00010000
+       PROGRAM-ID. SORTTRX.                                             00020007
+       ENVIRONMENT DIVISION.                                            00030000
+       INPUT-OUTPUT SECTION.                                            00040000
+       FILE-CONTROL.                                                    00050003
+            SELECT INFILE ASSIGN TO DD5.                                00060008
+            SELECT OUTFILE ASSIGN TO DD2.                               00070000
+            SELECT SORT-FILE ASSIGN TO SORTWK01.                        00080005
+       DATA DIVISION.                                                   00090003
+       FILE SECTION.                                                    00100000
+       FD INFILE                                                        00110005
+            RECORD CONTAINS 80.                                         00120007
+       01 INREC              PIC X(80).                                 00130007
+       FD OUTFILE                                                       00140005
+            RECORD CONTAINS 80.                                         00150007
+       01 OUTREC             PIC X(80).                                 00160007
+       SD SORT-FILE.                                                    00170000
+       01 SORT-REC.                                                     00180000
+          05 PET-ID          PIC XXX.                                   00190007
+          05 MRP             PIC 9999V99.                               00191007
+          05 QUANT-BOU       PIC 99.                                    00192007
+          05 FILLER          PIC X(69).                                 00200007
+       PROCEDURE DIVISION.                                              00210000
+             DISPLAY "SORT:"                                            00211005
+             SORT SORT-FILE                                             00220000
+             ASCENDING KEY PET-ID                                       00230007
+             USING  INFILE GIVING OUTFILE                               00250003
+             IF SORT-RETURN NOT = 0                                     00260006
+               DISPLAY "SORT RETURN" SORT-RETURN                        00270007
+             ELSE                                                       00271007
+               DISPLAY "SORT SUCCESS"                                   00272007
+             END-IF                                                     00280000
+             EXIT PROGRAM.                                              00290009
