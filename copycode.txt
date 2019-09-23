@@ -1,0 +1,12 @@
+************************* Top of Data ************
+      01 UNPROCESS.                               
+         05 PET-ID     PIC XXX.                   
+         05 MRP        PIC 9(4)V99.               
+         05 QUANT-BOU  PIC 99.                    
+         05 REMARK     PIC X(25).                 
+         05 FILLER     PIC X(44).                 
+************************ Bottom of Data **********
+                                                  
+                                                  
+                                                  
+                                                  
